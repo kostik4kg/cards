@@ -14,9 +14,9 @@ class Card extends Phaser.GameObjects.Sprite {
     this.position = position;
     this.setPosition(position.x, position.y);
   }
-  open () {
+  open(callback) {
     this.opened = true;
-    this.flip();
+    this.flip(callback);
   }
   close() {
     if (this.opened) {

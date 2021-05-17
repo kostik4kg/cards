@@ -14,11 +14,17 @@ class GameScene extends Phaser.Scene {
     this.createCard();
     this.initCards();
     this.createScore();
+    this.createAttempts();
     this.start();
     console.log(this.cardArr);
   }
   createScore() {
-    this.timerText = this.add.text(10,50,'score: ');
+    this.score = 0;
+    this.scoreText = this.add.text(10, 50, `score: ${this.score}`);
+  }
+  createAttempts() {
+    this.attempt = 3;
+    this.attemptText = this.add.text(10, 80, `attempts: ${this.attempt}`);
   }
   start() {
     this.cardOpened = [];
@@ -50,31 +56,45 @@ class GameScene extends Phaser.Scene {
       if (this.openedCardCount <= 2) {
         card.open();
         this.cardOpened.push(card);
-        console.log(card.valueRandom);
         this.openedCardCount++;
+
+        if (this.openedCardCount === 3) {
+          this.openedCardCount = 0;
+
+          this.cardOpened = this.cardOpened.filter(i => {
+            if (i.valueRandom === this.cardOpened[0].valueRandom) { return true; }
+            else return false;
+          });
+          if (this.cardOpened.length === 3) {
+            card.open(this.isTreeCard.bind(this, this.cardOpened[0].valueRandom));
+          }
+          else {
+            this.attemptText.setText(`attempts: ${this.attempt -= 1}`);
+            this.cardOpened = [];
+          }
+        }
       }
-      else{
-        card.open();
-        let a = this.cardOpened.filter(i => {
-          if (i.valueRandom === this.cardOpened[0].valueRandom) {return true;}
-          else return false;
-        });
-        // this.cardOpened.forEach(card => {
-        //   card.close();
-        // })
-        console.log(a);
-        this.openedCardCount = 0;
-        this.cardOpened = [];
-      }
-      // card.open();
     }
+  }
+  isTreeCard(val) {
+    console.log('its me');
+    console.log(val);
+    if(val <= 2) {
+      this.attemptText.setText(`attempts: ${this.attempt += config.cardsBonus[`card${val}`]}`);
+    }
+    else {
+      this.scoreText.setText(`score: ${this.score += config.cardsBonus[`card${val}`]}`);
+      console.log(config.cardsBonus[`card${val}`]);
+    }
+    // this.timeoutText.setText(`time:${this.timeout}`);
+    this.cardOpened = [];
   }
   getCardPosition () {
     let position = [];
     let cardTexture = this.textures.get('card').getSourceImage();
     let cardWidth = cardTexture.width + 4;
     let cardHeight = cardTexture.height + 4;
-    let offsetX = 150;
+    let offsetX = (config.width - (cardWidth * 3)) / 2;
     let offsetY = 100;
     
     for (let row = 0; row < config.rows ; row++) {

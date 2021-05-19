@@ -10,13 +10,9 @@ class GameScene extends Phaser.Scene {
     this.load.image('card4', './assets/image/cards/card4.png');
   }
   create () {
-    this.cardArr = this.createCardArray();
-    this.createCard();
-    this.initCards();
     this.createScore();
     this.createAttempts();
     this.start();
-    console.log(this.cardArr);
   }
   createScore() {
     this.score = 0;
@@ -27,8 +23,14 @@ class GameScene extends Phaser.Scene {
     this.attemptText = this.add.text(10, 80, `attempts: ${this.attempt}`);
   }
   start() {
+    this.cards = [];
+    this.cardArr = this.createCardArray();
+    console.log(this.cardArr);
+    this.createCard();
+    this.initCards();
     this.cardOpened = [];
     this.openedCardCount = 0;
+    this.input.removeListener('pointerdown');
   }
   initCards () {
     let position = this.getCardPosition();
@@ -49,42 +51,53 @@ class GameScene extends Phaser.Scene {
     this.input.on('gameobjectdown', this.onCardClick, this);
   }
   onCardClick(pointer, card) {
-    if(card.opened) {
-      card.close();
+    if (this.openedCardCount === 0 && !card.opened) {
+      this.attemptText.setText(`attempts: ${this.attempt -= 1}`);
+      card.open();
+      this.cardOpened.push(card);
+      this.openedCardCount++;
     }
-    else {
-      if (this.openedCardCount <= 2) {
+    else if (this.openedCardCount <= 2 && !card.opened) {
         card.open();
         this.cardOpened.push(card);
         this.openedCardCount++;
 
         if (this.openedCardCount === 3) {
           this.openedCardCount = 0;
-
+          
           this.cardOpened = this.cardOpened.filter(i => {
             if (i.valueRandom === this.cardOpened[0].valueRandom) { return true; }
             else return false;
           });
           if (this.cardOpened.length === 3) {
-            card.open(this.isTreeCard.bind(this, this.cardOpened[0].valueRandom));
-          }
+            card.open(this.isThreeCard.bind(this, this.cardOpened[0].valueRandom));
+            }
           else {
-            this.attemptText.setText(`attempts: ${this.attempt -= 1}`);
             this.cardOpened = [];
           }
+          this.restart(card);
         }
+      } else {
+        return false;
       }
-    }
   }
-  isTreeCard(val) {
-    console.log('its me');
-    console.log(val);
+  restart(card) {
+    card.open(this.isInputRest.bind(this));
+  }
+  isInputRest() {
+    this.input.on('pointerdown', (pointer) => {
+      this.cards.forEach(card => {
+        card.destroy();
+      });
+      this.start();
+    }, this);
+  }
+  isThreeCard(val) {
     if(val <= 2) {
       this.attemptText.setText(`attempts: ${this.attempt += config.cardsBonus[`card${val}`]}`);
     }
     else {
       this.scoreText.setText(`score: ${this.score += config.cardsBonus[`card${val}`]}`);
-      console.log(config.cardsBonus[`card${val}`]);
     }
     // this.timeoutText.setText(`time:${this.timeout}`);
     this.cardOpened = [];

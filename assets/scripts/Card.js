@@ -18,10 +18,10 @@ class Card extends Phaser.GameObjects.Sprite {
     this.opened = true;
     this.flip(callback);
   }
-  close() {
+  close(callback) {
     if (this.opened) {
       this.opened = false;
-      this.flip();
+      this.flip(callback);
       this.cardText = '';
     }
   }
@@ -39,7 +39,6 @@ class Card extends Phaser.GameObjects.Sprite {
   show(callback) {
     let texture = this.opened ? `card${this.valueRandom}` : 'card';
     this.setTexture(texture);
-
     this.scene.tweens.add({
       targets: this,
       scaleX: 1,
